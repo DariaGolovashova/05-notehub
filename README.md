@@ -1,5 +1,6 @@
 # React + TypeScript + Vite
 
+echo "trigger clean Vercel build" >> README.md
 This template provides a minimal setup to get React working in Vite with HMR and some ESLint rules.
 
 Currently, two official plugins are available:
