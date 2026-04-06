@@ -1,10 +1,10 @@
-import { useState, useCallback } from "react";
+import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useDebouncedCallback } from "use-debounce";
 
 import { fetchNotes, createNote, deleteNote } from "../../services/noteService";
 // import type { FetchNotesParams } from "../../services/noteService";
-import type { Note, NoteTag } from "../../types/note";
+import type { Note } from "../../types/note";
 import type { NoteFormValues } from "../NoteForm/NoteForm";
 
 import css from "./App.module.css";
