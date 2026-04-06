@@ -108,7 +108,7 @@ function App() {
           )}
         </header>
 
-        {data?.notes && data.notes.length > 0 && (
+        {data && data.notes.length > 0 && (
           <NoteList
             notes={data.notes}
             // onDelete={handleDelete}
