@@ -14,26 +14,29 @@ export interface FetchNotesParams {
   search?: string;
 }
 
-export interface FetchNoteResponse {
+export interface FetchNotesResponse {
   notes?: Note[];
   totalPages: number;
 }
 
 export const fetchNotes = async (
   params: FetchNotesParams = {},
-): Promise<FetchNoteResponse> => {
-  const { data } = await axios.get(BASE_URL, { params, headers });
+): Promise<FetchNotesResponse> => {
+  const { data } = await axios.get<FetchNotesResponse>(BASE_URL, {
+    params,
+    headers,
+  });
   return data;
 };
 
 export const createNote = async (
   note: Omit<Note, "id" | "createdAt" | "updatedAt">,
 ): Promise<Note> => {
-  const { data } = await axios.post(BASE_URL, note, { headers });
+  const { data } = await axios.post<Note>(BASE_URL, note, { headers });
   return data;
 };
 
-export const deleteNote = async (id: string): Promise<{ id: string }> => {
-  const { data } = await axios.delete(`${BASE_URL}/${id}`, { headers });
+export const deleteNote = async (id: string): Promise<Note> => {
+  const { data } = await axios.delete<Note>(`${BASE_URL}/${id}`, { headers });
   return data;
 };

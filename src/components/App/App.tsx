@@ -2,7 +2,8 @@ import { useState } from "react";
 import { useQuery, useMutation, useQueryClient } from "@tanstack/react-query";
 import { useDebouncedCallback } from "use-debounce";
 
-import { fetchNotes, createNote, deleteNote } from "../../services/noteService";
+import { fetchNotes, createNote } from "../../services/noteService";
+import type { FetchNotesResponse } from "../../services/noteService";
 // import type { FetchNotesParams } from "../../services/noteService";
 import type { Note } from "../../types/note";
 import type { NoteFormValues } from "../NoteForm/NoteForm";
@@ -27,40 +28,59 @@ function App() {
     setSearch(value);
   }, 500);
 
-  // const { data, isLoading, isError } = useQuery(
-  //   ["notes", page, search],
-  //   () => fetchNotes({ page, perPage: 12, search }),
-  //   { keepPreviousData: true },
-  // );
-  const { data, isLoading, isError } = useQuery({
+  // const { data, isLoading, isError } = useQuery<FetchNotesResponse>({
+  //   queryKey: ["notes", page, search],
+  //   queryFn: () => fetchNotes({ page, perPage: 12, search }),
+  //   keepPreviousData: true,
+  //   placeholderData: () =>
+  //     queryClient.getQueryData<FetchNotesResponse>(["notes", page, search]),
+  // });
+  const { data, isLoading, isError } = useQuery<FetchNotesResponse, Error>({
     queryKey: ["notes", page, search],
-    queryFn: () => fetchNotes({ page, search }),
+    queryFn: () => fetchNotes({ page, perPage: 12, search }),
+    placeholderData: () => {
+      return (
+        queryClient.getQueryData<FetchNotesResponse>([
+          "notes",
+          page - 1,
+          search,
+        ]) || {
+          notes: [],
+          totalPages: 1,
+        }
+      );
+    },
+    staleTime: 500,
   });
-
-  const createMutation = useMutation({
-    mutationFn: createNote,
+  // const createMutation = useMutation({
+  //   mutationFn: (values: Omit<Note, "id" | "createdAt" | "updatedAt">) =>
+  //     createNote(values),
+  //   onSuccess: () => {
+  //     queryClient.invalidateQueries({ queryKey: ["notes"] });
+  //     setIsModalOpen(false);
+  //   },
+  // });
+  const createMutation = useMutation<
+    Note,
+    Error,
+    Omit<Note, "id" | "createdAt" | "updatedAt">
+  >({
+    mutationFn: (values) => createNote(values),
     onSuccess: () => {
       queryClient.invalidateQueries({ queryKey: ["notes"] });
-      // setIsModalOpen(false);
+      setIsModalOpen(false);
     },
   });
 
-  const deleteMutation = useMutation({
-    mutationFn: deleteNote,
-    onSuccess: () => queryClient.invalidateQueries({ queryKey: ["notes"] }),
-  });
+  // const deleteMutation = useMutation({
+  //   mutationFn: (id: string) => deleteNote(id),
+  //   onSuccess: () => queryClient.invalidateQueries({ queryKey: ["notes"] }),
+  // });
 
-  const handleDelete = (id: string) => {
-    deleteMutation.mutate(id);
-  };
-
-  // const handleCreate = (values: {
-  //   title: string;
-  //   content: string;
-  //   tag: NoteTag;
-  // }) => {
-  //   createMutation.mutate(values);
+  // const handleDelete = (id: string) => {
+  //   deleteMutation.mutate(id);
   // };
+
   const handleCreate = (values: NoteFormValues) => {
     createMutation.mutate(
       values as Omit<Note, "id" | "createdAt" | "updatedAt">,
@@ -79,13 +99,20 @@ function App() {
           </button>
           {isLoading && <Loader />}
           {isError && <ErrorMessage />}
-          {data && data.totalPages > 1 && (
-            <Pagination pageCount={data.totalPages} onPageChange={setPage} />
+          {data?.totalPages && data.totalPages > 1 && (
+            <Pagination
+              pageCount={data.totalPages}
+              currentPage={page}
+              onPageChange={setPage}
+            />
           )}
         </header>
 
         {data?.notes && data.notes.length > 0 && (
-          <NoteList notes={data.notes} onDelete={handleDelete} />
+          <NoteList
+            notes={data.notes}
+            // onDelete={handleDelete}
+          />
         )}
         {isModalOpen && (
           <Modal onClose={() => setIsModalOpen(false)}>
@@ -96,7 +123,6 @@ function App() {
           </Modal>
         )}
       </div>
-      {/* <section id="spacer"></section> */}
     </>
   );
 }
